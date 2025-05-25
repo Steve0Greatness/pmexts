@@ -8,7 +8,16 @@
 
     const PROJECT_ID_KEY = 'IkeEmailTwofa_ProjectID';
 
+    Scratch.vm.runtime.extensionStorage ??= {};
+
     class TwoFAExtension {
+        constructor() {
+          this.runtime = Scratch.vm.runtime;
+          if ('IkeEmailTwofa' in this.runtime.extensionStorage) {
+            cachedProjectId = runtime.extensionStorage['IkeEmailTwofa']['projectID'];
+          }
+        }
+
         getInfo() {
             return {
                 id: 'IkeEmailTwofa',
@@ -160,22 +169,20 @@
             };
         }
 
-        constructor() {
-            const runtime = Scratch.runtime;
-            if (runtime && runtime.vm) {
-                const state = runtime.vm.extensionState['IkeEmailTwofa'] ||= {};
-                cachedProjectID = state['projectID'] || null;
-            } else {
-                console.warn('Scratch.runtime.vm not available yet.');
-            }
+        serialize() {
+          return { projectID: cachedProjectID }
+        }
+
+        deserialize(data) {
+          cachedProjectID = data.projectID
         }
 
         setEmailPreset(args) {
-            emailPreset = parseInt(args.PRESET);
+          emailPreset = parseInt(args.PRESET);
         }
 
         setCustomHTML(args) {
-            customHTML = args.HTML;
+          customHTML = args.HTML;
         }
 
         //setCustomEmailLogin(args) {
@@ -208,10 +215,10 @@
                 if (trimmed && !isError) {
                     cachedProjectID = trimmed;
 
-                    const runtime = Scratch.runtime;
+                    const runtime = this.runtime;
                     if (runtime && runtime.vm) {
-                        runtime.vm.extensionState['IkeEmailTwofa'] ||= {};
-                        runtime.vm.extensionState['IkeEmailTwofa']['projectID'] = trimmed;
+                        runtime.extensionStorage['IkeEmailTwofa'] ||= {};
+                        runtime.extensionStorage['IkeEmailTwofa']['projectID'] = trimmed;
                     }
 
                     return cachedProjectID;
