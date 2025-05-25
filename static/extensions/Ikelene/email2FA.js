@@ -14,7 +14,7 @@
         constructor() {
           this.runtime = Scratch.vm.runtime;
           if ('IkeEmailTwofa' in this.runtime.extensionStorage) {
-            cachedProjectId = runtime.extensionStorage['IkeEmailTwofa']['projectID'];
+            cachedProjectId = this.runtime.extensionStorage['IkeEmailTwofa']['projectID'];
           }
         }
 
