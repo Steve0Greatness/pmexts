@@ -59,17 +59,53 @@ file_upload_button.textContent = "TEST";
 file_upload_button.style.display = "block";
 file_upload_button.style.flex = "1";
 
-const options_menu = document.createElement("button");
-options_menu.classList.add("menu-open");
-options_menu.textContent = "TEST2";
-options_menu.style.display = "block";
-options_menu.style.flex = "1";
+const FILE_MENU_BUTTON = document.createElement("button");
+FILE_MENU_BUTTON.classList.add("menu-open");
+FILE_MENU_BUTTON.textContent = "TEST2";
+FILE_MENU_BUTTON.style.display = "block";
+FILE_MENU_BUTTON.style.flex = "1";
 
-FILE_TEMPLATE.append(file_upload_button, options_menu, file_upload);
+const FILE_MENU = document.createElement("div");
+FILE_MENU.classList.add("menu");
+FILE_MENU.style.display = "none";
+FILE_MENU.style.position = "absolute";
+FILE_MENU.style.top = "100%";
+FILE_MENU.style.left = "100%";
+FILE_MENU.style.transform = `translateX(-50%) translateY(-50%)`;
+
+FILE_TEMPLATE.append(file_upload_button, FILE_MENU_BUTTON, file_upload, FILE_MENU);
 
 const TEXTAREA_INPUT_TEMPLATE = document.createElement("textarea");
-TEXTAREA_INPUT_TEMPLATE.rows = "5";
-TEXTAREA_INPUT_TEMPLATE.cols = "5";
+const TEXTAREA_MIN_SIZING = [100, 32];
+
+TEXTAREA_INPUT_TEMPLATE.style.width = TEXTAREA_MIN_SIZING[0] + "px";
+TEXTAREA_INPUT_TEMPLATE.style.height = TEXTAREA_MIN_SIZING[1] + "px";
+
+const TEXTAREA_PADDING = [15, 25];
+
+const serialize_slider = (value, min, max) => value + "," + min + "," + max
+const deserialize_slider = data => {
+  let [value, min, max] = data.split(",");
+  return {value, min, max};
+}
+
+const BOOLEAN_COLORS = {
+  True: "#00C900",
+  False: "#C90000",
+};
+
+const BOOLEAN_TEMPLATE = document.createElement("div");
+
+const BOOLEAN_LABEL = document.createElement("label");
+BOOLEAN_LABEL.classList.add("label");
+const BOOLEAN_SWATCH = document.createElement("div");
+BOOLEAN_SWATCH.classList.add("swatch");
+BOOLEAN_SWATCH.style = `width:5px;height:5px;background-color:#ccc;`;
+
+const BOOLEAN_CHECKBOX = document.createElement("input");
+BOOLEAN_CHECKBOX.classList.add("checkbox");
+
+BOOLEAN_TEMPLATE.append(BOOLEAN_LABEL, BOOLEAN_SWATCH, BOOLEAN_CHECKBOX);
 
 Scratch.gui.getBlockly().then(ScratchBlocks => {
   ScratchBlocks.FieldCustom.registerInput(
@@ -121,22 +157,59 @@ Scratch.gui.getBlockly().then(ScratchBlocks => {
     prefix_id("TextareaInput"),
     TEXTAREA_INPUT_TEMPLATE,
     function(input) {
-      input.inputSource.firstChild.addEventListener("change", event => {
+      const source = input.inputSource;
+      const textarea = source.firstChild;
+      textarea.addEventListener("change", event => {
         input.setValue(event.target.value);
       });
+
+      let paused = false;
+      new ResizeObserver(entries => {
+        if (paused) return;
+        for (const entry of entries) {
+          paused = true;
+          let {width, height} = entry.contentRect;
+          width = Math.max(TEXTAREA_MIN_SIZING[0], width);
+          height = Math.max(TEXTAREA_MIN_SIZING[1], height);
+          input.size_.width = width + TEXTAREA_PADDING[0];
+          input.size_.height = height + TEXTAREA_PADDING[1];
+
+          input.inputSource.setAttribute("width", width);
+          input.inputSource.setAttribute("height", height);
+
+          input.sourceBlock_.render(true);
+          requestAnimationFrame(() => { paused = false; });
+        }
+      }).observe(textarea);
     },
     _ => {},
     _ => {},
     _ => {}
   );
+
+  ScratchBlocks.FieldCustom.registerInput(
+    prefix_id("SnapBoolean"),
+    BOOLEAN_TEMPLATE,
+    function(input){
+      // TODO
+    },
+    _ => {},
+    _ => {},
+    _ => {},
+  );
 });
 
-const FILE_DEFAULT_VALUE = `${LoaderMethods.DataURI}\n*/*\ndata:text/plain;base64,${btoa("Hello, World!")}`;
+const TEXT_DEFAULT = "Hello, World!"
+
+const FILE_DEFAULT_VALUE = `${LoaderMethods.DataURI}\n*/*\ndata:text/plain;base64,${btoa(TEXT_DEFAULT)}`;
+const SLIDER_DEFAULT = serialize_slider(10, 0, 20);
 
 const create_field_name = opcode => "field_" + self_id + "_" + opcode;
 
 const FILE_INPUT_FIELD_NAME = create_field_name("FileInput");
 const TEXTAREA_FIELD_NAME = create_field_name("TextareaInput");
+const SLIDER_FIELD_NAME = create_field_name("SliderInline");
+const BOOLEAN_FIELD_NAME = create_field_name("SnapBoolean");
 class MoreFields {
   constructor(runtime) {
     this.runtime = runtime;
@@ -174,7 +247,7 @@ class MoreFields {
             [TEXTAREA_FIELD_NAME]: {
               type: Scratch.ArgumentType.CUSTOM,
               id: prefix_id("TextareaInput"),
-              defaultValue: "Hello, World!"
+              defaultValue: TEXT_DEFAULT
             }
           }
         },
@@ -187,14 +260,45 @@ class MoreFields {
           }
         },
         /*{
+          opcode: "SliderInline",
+          text: "[" + SLIDER_FIELD_NAME + "]",
+          blockType: Scratch.BlockType.REPORTER,
+          arguments: {
+            [SLIDER_FIELD_NAME]: {
+              type: "custom",
+              id: prefix_id("SliderInline"),
+              defaultValue: SLIDER_DEFAULT
+            }
+          }
+        },
+        {
+          opcode: "sliderInline",
+          text: "slider [NUM]",
+          blockType: Scratch.BlockType.REPORTER,
+          arguments: {
+            NUM: { fillIn: "SliderInline" }
+          }
+        },*/
+        /*{
           opcode: "textareaInline",
           blockType: Scratch.BlockType.REPORTER,
+        },*/
+        {
+          opcode: "SnapBoolean",
+          text: "[" + BOOLEAN_FIELD_NAME + "]"
+          blockType: Scratch.BlockType.BOOLEAN,
+          arguments: {
+            [BOOLEAN_FIELD_NAME]: {
+              type: "custom",
+              id: prefix_id("SnapBoolean")
+            }
+          }
         },
         {
           opcode: "snapBool",
           blockType: Scratch.BlockType.BOOLEAN,
         },
-        {
+        /*{
           opcode: "date",
           blockType: Scratch.BlockType.REPORTER,
         },
