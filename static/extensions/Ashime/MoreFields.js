@@ -89,23 +89,29 @@ const deserialize_slider = data => {
   return {value, min, max};
 }
 
-const BOOLEAN_COLORS = {
-  True: "#00C900",
-  False: "#C90000",
-};
+const BOOLEAN_COLORS = [
+  "#C90000", // false
+  "#00C900", // true
+];
+const BOOLEAN_LABELS = [
+  "F", // False
+  "T", // True
+];
+const BOOLEAN_SWATCH_SPACING = 5;
 
 const BOOLEAN_TEMPLATE = document.createElement("div");
+BOOLEAN_TEMPLATE.style.position = "relative";
+BOOLEAN_TEMPLATE.style.width = "25px";
 
-const BOOLEAN_LABEL = document.createElement("label");
-BOOLEAN_LABEL.classList.add("label");
+const BOOLEAN_LABEL = document.createElement("span");
+BOOLEAN_LABEL.classList.add("text");
+BOOLEAN_LABEL.style.width = "25px";
+
 const BOOLEAN_SWATCH = document.createElement("div");
 BOOLEAN_SWATCH.classList.add("swatch");
-BOOLEAN_SWATCH.style = `width:5px;height:5px;background-color:#ccc;`;
+BOOLEAN_SWATCH.style = `width:5px;height:5px;background-color:#ccc;position:absolute;`;
 
-const BOOLEAN_CHECKBOX = document.createElement("input");
-BOOLEAN_CHECKBOX.classList.add("checkbox");
-
-BOOLEAN_TEMPLATE.append(BOOLEAN_LABEL, BOOLEAN_SWATCH, BOOLEAN_CHECKBOX);
+BOOLEAN_TEMPLATE.append(BOOLEAN_LABEL, BOOLEAN_SWATCH);
 
 Scratch.gui.getBlockly().then(ScratchBlocks => {
   ScratchBlocks.FieldCustom.registerInput(
@@ -176,8 +182,7 @@ Scratch.gui.getBlockly().then(ScratchBlocks => {
 
           input.inputSource.setAttribute("width", width);
           input.inputSource.setAttribute("height", height);
-
-          input.sourceBlock_.render(true);
+          if (input.sourceBlock_) input.sourceBlock_.render(true);
           requestAnimationFrame(() => { paused = false; });
         }
       }).observe(textarea);
@@ -191,7 +196,27 @@ Scratch.gui.getBlockly().then(ScratchBlocks => {
     prefix_id("SnapBoolean"),
     BOOLEAN_TEMPLATE,
     function(input){
-      // TODO
+      const container = input.inputSource.firstChild;
+      const text = container.querySelector(".text");
+      const swatch = container.querySelector(".swatch");
+
+      const update_appearance = function() {
+        const value = Scratch.Cast.toNumber(input.getValue());
+
+        swatch.style.left = (100 * value + (value ? 1 : -1) * BOOLEAN_SWATCH_SPACING).toString() + "%";
+        
+        container.style.background = BOOLEAN_COLORS[value];
+        text.textContent = BOOLEAN_LABELS[value];
+
+      };
+      update_appearance();
+
+      container.addEventListener("mousedown", () => {
+        var value = Scratch.Cast.toNumber(input.getValue());
+        input.setValue((value ? 0 : 1).toString()); // reverse it
+        update_appearance();
+        if (input._sourceBlock) input._sourceBlock.render(true);
+      });
     },
     _ => {},
     _ => {},
@@ -210,6 +235,14 @@ const FILE_INPUT_FIELD_NAME = create_field_name("FileInput");
 const TEXTAREA_FIELD_NAME = create_field_name("TextareaInput");
 const SLIDER_FIELD_NAME = create_field_name("SliderInline");
 const BOOLEAN_FIELD_NAME = create_field_name("SnapBoolean");
+
+const FIELD_NAME_PREDONE = new Map([
+  ["FileInput", FILE_INPUT_FIELD_NAME],
+  ["TextareaInput", TEXTAREA_FIELD_NAME],
+  ["SliderInline", SLIDER_FIELD_NAME],
+  ["SnapBoolean", BOOLEAN_FIELD_NAME],
+]);
+
 class MoreFields {
   constructor(runtime) {
     this.runtime = runtime;
@@ -285,18 +318,23 @@ class MoreFields {
         },*/
         {
           opcode: "SnapBoolean",
-          text: "[" + BOOLEAN_FIELD_NAME + "]"
+          text: "[" + BOOLEAN_FIELD_NAME + "]",
           blockType: Scratch.BlockType.BOOLEAN,
           arguments: {
             [BOOLEAN_FIELD_NAME]: {
               type: "custom",
-              id: prefix_id("SnapBoolean")
+              id: prefix_id("SnapBoolean"),
+              defaultValue: "1",
             }
           }
         },
         {
           opcode: "snapBool",
+          text: "[BOOL]",
           blockType: Scratch.BlockType.BOOLEAN,
+          arguments: {
+            BOOL: { fillIn: "SnapBoolean" }
+          }
         },
         /*{
           opcode: "date",
@@ -322,6 +360,13 @@ class MoreFields {
   }
   textarea(args) {
     return args.TEXT;
+  }
+
+  SnapBoolean(args) {
+    return args[BOOLEAN_FIELD_NAME];
+  }
+  snapBool(args) {
+    return args.BOOL;
   }
 }
 
