@@ -12,7 +12,15 @@ export default [
         banner: "ObviousAlexC/PenPlus.svg",
         creator: "pinksheep2917",
     },
-        {
+    {
+        name: "Shovel Debugger",
+        description: "Shovel's improved and feature rich debugger!",
+        code: "TheShovel/shoveldebugger.js",
+        banner: "TheShovel/thumbnail-shoveldebugger.avif",
+        isGitHub: true,
+        creator: "TheShovel",
+    },
+    {
         name: "MotionSprite",
         description: "An advanced math-based animation system",
         code: "TheShovel/qoan-renderer.js",
@@ -241,7 +249,7 @@ export default [
     },
     {
         name: "Sets",
-        description: "Store non-repeating, unordered, data super efficently in sets.",
+        description: "Store non-repeating, unordered data super efficiently in sets.",
         code: "DogeisCut/dogeiscutSet.js",
         banner: "DogeisCut/dogeiscutSet.svg",
         creator: "DogeisCut",
@@ -530,6 +538,15 @@ export default [
         isGitHub: true,
         creatorAlias: "gaimerI17",
         notes: "Extension thumbnail made by Dillon."
+    },
+    {
+        name: "Cryptography",
+        description: "Hash, encrypt and verify values using various algorithms. Actual security not guaranteed",
+        code: "gaimerI17/crypto.js",
+        banner: "gaimerI17/crypto.avif",
+        creator: "gaimerI",
+        isGitHub: true,
+        creatorAlias: "gaimerI17",
     },
     /* these extensions are completely dead as of now
     {
